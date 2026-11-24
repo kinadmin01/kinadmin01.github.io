@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KI&amp;N — Boutique</title>
+<meta name="robots" content="noindex">
+<style>
+  body { margin: 0; font-family: -apple-system, system-ui, "Segoe UI", Roboto, Arial, sans-serif; background: #faf7f2; color: #222; }
+  .boite { max-width: 440px; margin: 0 auto; padding: 32px 20px; text-align: center; }
+  h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: 1px; }
+  p { font-size: 16px; line-height: 1.5; margin: 12px 0; }
+  .ar { direction: rtl; font-size: 17px; }
+  .btn { display: block; margin: 20px 0 8px; padding: 16px; border-radius: 12px; background: #111; color: #fff; font-size: 18px; font-weight: 600; text-decoration: none; }
+  .etapes { text-align: left; background: #fff; border-radius: 12px; padding: 14px 18px; margin-top: 22px; font-size: 15px; }
+  .etapes.ar { text-align: right; }
+  .petit { display: inline-block; margin-top: 18px; color: #666; font-size: 14px; }
+  #attente { color: #666; }
+</style>
+</head>
+<body>
+<div class="boite">
+  <h1>KI&amp;N</h1>
+  <p id="attente">Ouverture de la boutique…</p>
+  <div id="iphone" hidden>
+    <p>Pour commander, ouvrez la boutique dans <b>Safari</b> :</p>
+    <p class="ar">لطلب منتجاتنا، افتحوا المتجر في <b>Safari</b> :</p>
+    <a class="btn" id="safari" href="#">Ouvrir dans Safari · افتح في Safari</a>
+    <div class="etapes">Si rien ne se passe : touchez <b>⋯</b> (en haut à droite), puis <b>« Ouvrir dans le navigateur externe »</b> ou <b>« Ouvrir dans Safari »</b>.</div>
+    <div class="etapes ar">إذا لم يحدث شيء: اضغطوا على <b>⋯</b> (أعلى اليمين)، ثم <b>«فتح في المتصفح الخارجي»</b> أو <b>«فتح في Safari»</b>.</div>
+    <a class="petit" id="ici" href="#">Essayer quand même ici · جرّب هنا</a>
+  </div>
+</div>
+<script>
+(function () {
+  /* Page pont M02 (24/11/2026). Sur iPhone, le navigateur intégré de Facebook / Instagram affiche une page blanche
+     pour script.google.com : on renvoie vers Safari (schéma x-safari-https, iOS 17 et plus) avec des consignes en secours.
+     Partout ailleurs : redirection immédiate vers la boutique. ?apercu=iphone force l'écran iPhone sans redirection. */
+  var DEST = 'https://script.google.com/macros/s/AKfycbyqwO3dEBIuCVnyv_bZ6IWfjya2jZnNfDmAJrXlWbVhWoUod9ARIasIZHT76-7nFWkf/exec';
+  var reste = location.search.replace(/^\?/, '').split('&').filter(function (p) { return p && p !== 'apercu=iphone'; });
+  var cible = DEST + (reste.length ? '?' + reste.join('&') : '');
+  var ua = navigator.userAgent || '';
+  var apercu = /[?&]apercu=iphone(&|$)/.test(location.search);
+  var ios = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  var integre = /FBAN|FBAV|FBIOS|FB_IAB|Instagram|Messenger|Threads|BytedanceWebview|musical_ly|Snapchat/i.test(ua);
+  if (!apercu && !(ios && integre)) { location.replace(cible); return; }
+  var safari = 'x-safari-' + cible;
+  document.getElementById('attente').hidden = true;
+  document.getElementById('iphone').hidden = false;
+  document.getElementById('safari').href = safari;
+  document.getElementById('ici').href = cible;
+  if (!apercu) { try { location.href = safari; } catch (e) {} }
+})();
+</script>
+</body>
+</html>
