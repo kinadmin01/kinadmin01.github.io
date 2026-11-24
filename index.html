@@ -7,14 +7,21 @@
 <meta name="robots" content="noindex">
 <style>
   body { margin: 0; font-family: -apple-system, system-ui, "Segoe UI", Roboto, Arial, sans-serif; background: #faf7f2; color: #222; }
-  .boite { max-width: 440px; margin: 0 auto; padding: 32px 20px; text-align: center; }
-  h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: 1px; }
-  p { font-size: 16px; line-height: 1.5; margin: 12px 0; }
-  .ar { direction: rtl; font-size: 17px; }
-  .btn { display: block; margin: 20px 0 8px; padding: 16px; border-radius: 12px; background: #111; color: #fff; font-size: 18px; font-weight: 600; text-decoration: none; }
-  .etapes { text-align: left; background: #fff; border-radius: 12px; padding: 14px 18px; margin-top: 22px; font-size: 15px; }
+  .boite { max-width: 440px; margin: 0 auto; padding: 28px 18px 40px; text-align: center; }
+  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: 1px; }
+  p { font-size: 16px; line-height: 1.5; margin: 10px 0; }
+  .ar { direction: rtl; }
+  .fleche { position: fixed; top: 6px; right: 14px; font-size: 44px; line-height: 1; color: #c8102e; animation: bouge 1s ease-in-out infinite alternate; }
+  @keyframes bouge { from { transform: translate(0, 6px); } to { transform: translate(4px, -2px); } }
+  .etapes { background: #fff; border: 2px solid #111; border-radius: 14px; padding: 14px 16px; margin: 18px 0 10px; text-align: left; font-size: 17px; line-height: 1.6; }
   .etapes.ar { text-align: right; }
-  .petit { display: inline-block; margin-top: 18px; color: #666; font-size: 14px; }
+  .etapes b { font-size: 18px; }
+  .num { display: inline-block; width: 26px; height: 26px; border-radius: 13px; background: #111; color: #fff; text-align: center; line-height: 26px; font-size: 15px; margin: 0 6px; }
+  .btn { display: block; width: 100%; box-sizing: border-box; margin: 16px 0 6px; padding: 15px; border: 0; border-radius: 12px; background: #111; color: #fff; font-size: 17px; font-weight: 600; text-decoration: none; font-family: inherit; }
+  .lien { word-break: break-all; font-size: 15px; color: #444; background: #eee; border-radius: 8px; padding: 8px; user-select: all; -webkit-user-select: all; }
+  .ok { color: #1a7f37; font-weight: 600; min-height: 1.4em; }
+  .petit { display: inline-block; margin-top: 14px; color: #666; font-size: 14px; }
+  .diag { margin-top: 22px; color: #aaa; font-size: 11px; }
   #attente { color: #666; }
 </style>
 </head>
@@ -23,19 +30,31 @@
   <h1>KI&amp;N</h1>
   <p id="attente">Ouverture de la boutique…</p>
   <div id="iphone" hidden>
-    <p>Pour commander, ouvrez la boutique dans <b>Safari</b> :</p>
-    <p class="ar">لطلب منتجاتنا، افتحوا المتجر في <b>Safari</b> :</p>
-    <a class="btn" id="safari" href="#">Ouvrir dans Safari · افتح في Safari</a>
-    <div class="etapes">Si rien ne se passe : touchez <b>⋯</b> (en haut à droite), puis <b>« Ouvrir dans le navigateur externe »</b> ou <b>« Ouvrir dans Safari »</b>.</div>
-    <div class="etapes ar">إذا لم يحدث شيء: اضغطوا على <b>⋯</b> (أعلى اليمين)، ثم <b>«فتح في المتصفح الخارجي»</b> أو <b>«فتح في Safari»</b>.</div>
-    <a class="petit" id="ici" href="#">Essayer quand même ici · جرّب هنا</a>
+    <div class="fleche" aria-hidden="true">↗</div>
+    <p><b>Pour commander, ouvrez la boutique dans Safari :</b></p>
+    <div class="etapes">
+      <span class="num">1</span> Touchez <b>⋯</b> en haut à droite<br>
+      <span class="num">2</span> Choisissez <b>« Ouvrir dans le navigateur externe »</b> (ou « Ouvrir dans Safari »)
+    </div>
+    <div class="etapes ar">
+      <span class="num">1</span> اضغطوا على <b>⋯</b> في الأعلى على اليمين<br>
+      <span class="num">2</span> اختاروا <b>«فتح في المتصفح الخارجي»</b> أو «فتح في Safari»
+    </div>
+    <p>Ou copiez le lien et collez-le dans Safari · أو انسخوا الرابط والصقوه في Safari</p>
+    <button class="btn" id="copier" type="button">Copier le lien · نسخ الرابط</button>
+    <p class="ok" id="copie" aria-live="polite"></p>
+    <div class="lien" id="lien"></div>
+    <a class="petit" id="essai" href="#">Essayer d'ouvrir Safari automatiquement</a>
+    <div class="diag" id="diag"></div>
   </div>
 </div>
 <script>
 (function () {
-  /* Page pont M02 (24/11/2026). Sur iPhone, le navigateur intégré de Facebook / Instagram affiche une page blanche
-     pour script.google.com : on renvoie vers Safari (schéma x-safari-https, iOS 17 et plus) avec des consignes en secours.
-     Partout ailleurs : redirection immédiate vers la boutique. ?apercu=iphone force l'écran iPhone sans redirection. */
+  /* Page pont M02 (24/11/2026, v2). Sur iPhone, le navigateur intégré de Facebook / Instagram affiche une page blanche
+     pour script.google.com, et le passage par x-safari-https donne aussi un écran blanc (essai réel du 24/11).
+     v2 : consignes « ⋯ › Ouvrir dans le navigateur externe » en premier, bouton « Copier le lien », essai x-safari dans un
+     iframe caché (la page ne devient plus blanche). Partout ailleurs : redirection immédiate vers la boutique.
+     ?apercu=iphone force l'écran iPhone sans redirection. */
   var DEST = 'https://script.google.com/macros/s/AKfycbyqwO3dEBIuCVnyv_bZ6IWfjya2jZnNfDmAJrXlWbVhWoUod9ARIasIZHT76-7nFWkf/exec';
   var reste = location.search.replace(/^\?/, '').split('&').filter(function (p) { return p && p !== 'apercu=iphone'; });
   var cible = DEST + (reste.length ? '?' + reste.join('&') : '');
@@ -44,12 +63,35 @@
   var ios = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
   var integre = /FBAN|FBAV|FBIOS|FB_IAB|Instagram|Messenger|Threads|BytedanceWebview|musical_ly|Snapchat/i.test(ua);
   if (!apercu && !(ios && integre)) { location.replace(cible); return; }
-  var safari = 'x-safari-' + cible;
-  document.getElementById('attente').hidden = true;
-  document.getElementById('iphone').hidden = false;
-  document.getElementById('safari').href = safari;
-  document.getElementById('ici').href = cible;
-  if (!apercu) { try { location.href = safari; } catch (e) {} }
+  var $ = function (id) { return document.getElementById(id); };
+  $('attente').hidden = true;
+  $('iphone').hidden = false;
+  var court = (location.origin && /^https:/.test(location.origin) ? location.origin + location.pathname : 'https://kinadmin01.github.io/') + (reste.length ? '?' + reste.join('&') : '');
+  $('lien').textContent = court;
+  var appli = /Instagram/i.test(ua) ? 'Instagram' : /FBAN|FBAV|FBIOS|FB_IAB/i.test(ua) ? 'Facebook' : /Messenger/i.test(ua) ? 'Messenger' : 'autre';
+  var v = (ua.match(/OS (\d+)_(\d+)/) || []);
+  $('diag').textContent = appli + ' · iOS ' + (v[1] ? v[1] + '.' + v[2] : '?');
+  function essaiSafari() {
+    var f = document.createElement('iframe');
+    f.style.display = 'none';
+    f.src = 'x-safari-' + cible;
+    document.body.appendChild(f);
+    setTimeout(function () { try { f.remove(); } catch (e) {} }, 3000);
+  }
+  function montre(t) { $('copie').textContent = t; }
+  function copieSecours() {
+    var r = document.createRange(); r.selectNodeContents($('lien'));
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    montre(ok ? '✓ Lien copié : ouvrez Safari et collez-le · تم النسخ' : 'Appuyez longuement sur le lien ci-dessous pour le copier');
+  }
+  $('copier').addEventListener('click', function () {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(court).then(function () { montre('✓ Lien copié : ouvrez Safari et collez-le · تم النسخ'); }, copieSecours);
+    } else { copieSecours(); }
+  });
+  $('essai').addEventListener('click', function (e) { e.preventDefault(); essaiSafari(); });
+  if (!apercu) { try { essaiSafari(); } catch (e) {} }
 })();
 </script>
 </body>
